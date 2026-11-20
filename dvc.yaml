@@ -1,0 +1,39 @@
+stages:
+  evaluate:
+    cmd: py -3.13 train.py
+    deps:
+      - data/train.csv
+      - train.py
+      - requirements.txt
+    params:
+      - features
+      - cv
+      - forest
+    metrics:
+      - evaluation/metrics.json:
+          cache: false
+    outs:
+      - evaluation/predictions.csv:
+          cache: false
+      - evaluation/roc.csv:
+          cache: false
+      - evaluation/importance.csv:
+          cache: false
+plots:
+  - ROC:
+      template: simple
+      x: fpr
+      y:
+        evaluation/roc.csv: tpr
+      x_label: False positive rate
+      y_label: True positive rate
+  - Confusion matrix:
+      template: confusion
+      x: actual
+      y:
+        evaluation/predictions.csv: predicted
+  - Permutation importance:
+      template: bar_horizontal_sorted
+      x: accuracy_drop
+      y:
+        evaluation/importance.csv: feature

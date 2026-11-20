@@ -1,0 +1,44 @@
+schema: '2.0'
+stages:
+  evaluate:
+    cmd: py -3.13 train.py
+    deps:
+    - path: data/train.csv
+      hash: md5
+      md5: 2309cc5f04782ed9bb6016d9f4e381cf
+      size: 61194
+    - path: requirements.txt
+      hash: md5
+      md5: fcf2bb5c73aff8beaefac861da0398eb
+      size: 78
+    - path: train.py
+      hash: md5
+      md5: a2e49700c05c5bfe8c536b5832e583ec
+      size: 5327
+    params:
+      params.yaml:
+        cv:
+          folds: 5
+          random_state: 42
+        features: extended
+        forest:
+          n_estimators: 300
+          max_depth: 7
+          min_samples_leaf: 2
+    outs:
+    - path: evaluation/importance.csv
+      hash: md5
+      md5: 4c2bc4790470a3964c81cdab640dd0c4
+      size: 505
+    - path: evaluation/metrics.json
+      hash: md5
+      md5: 72dcc45e44c8aef194d3116c8393c56f
+      size: 103
+    - path: evaluation/predictions.csv
+      hash: md5
+      md5: 3225221a25e582246dc0a360eef9d4d9
+      size: 27047
+    - path: evaluation/roc.csv
+      hash: md5
+      md5: b4d193a583d862b58a2675680de7e80e
+      size: 11573
