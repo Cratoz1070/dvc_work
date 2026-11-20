@@ -9,10 +9,12 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, roc_curve
 from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.tree import DecisionTreeClassifier
 
 
 FEATURE_SETS = {
@@ -63,7 +65,19 @@ class FillAge(BaseEstimator, TransformerMixin):
         return result
 
 
-def make_pipeline(numeric, categorical, forest, seed):
+def make_estimator(params, seed):
+    estimators = {
+        "forest": RandomForestClassifier,
+        "logistic": LogisticRegression,
+        "tree": DecisionTreeClassifier,
+    }
+    name = params["model"]
+    if name not in estimators:
+        raise ValueError(f"Unknown model {name!r}. Choose: {', '.join(estimators)}")
+    return estimators[name](random_state=seed, **params[name])
+
+
+def make_pipeline(numeric, categorical, estimator):
     preprocessor = ColumnTransformer([
         ("numeric", Pipeline([
             ("imputer", SimpleImputer(strategy="median")),
@@ -77,7 +91,7 @@ def make_pipeline(numeric, categorical, forest, seed):
     return Pipeline([
         ("age", FillAge()),
         ("preprocessor", preprocessor),
-        ("model", RandomForestClassifier(random_state=seed, **forest)),
+        ("model", estimator),
     ])
 
 
@@ -90,7 +104,7 @@ def main():
     features = numeric + categorical
     seed = params["cv"]["random_state"]
     cv = StratifiedKFold(n_splits=params["cv"]["folds"], shuffle=True, random_state=seed)
-    pipeline = make_pipeline(numeric, categorical, params["forest"], seed)
+    pipeline = make_pipeline(numeric, categorical, make_estimator(params, seed))
 
     predictions = []
     scores = []

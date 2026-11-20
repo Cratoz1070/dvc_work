@@ -7,8 +7,11 @@ stages:
       - requirements.txt
     params:
       - features
+      - model
       - cv
       - forest
+      - logistic
+      - tree
     metrics:
       - evaluation/metrics.json:
           cache: false
