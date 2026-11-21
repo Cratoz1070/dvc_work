@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yaml
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import clone
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -30,41 +30,6 @@ FEATURE_SETS = {
 }
 
 
-def add_features(data):
-    result = data.copy()
-    title = result["Name"].str.extract(r",\s*([^.]*)\.", expand=False).str.strip()
-    title = title.replace({"Mlle": "Miss", "Ms": "Miss", "Mme": "Mrs"})
-    result["Title"] = title.where(title.isin({"Mr", "Mrs", "Miss", "Master"}), "Other")
-    result["FamilySize"] = result["SibSp"] + result["Parch"] + 1
-    result["IsAlone"] = (result["FamilySize"] == 1).astype(int)
-    result["FamilyCategory"] = pd.cut(
-        result["FamilySize"], [0, 1, 4, 7, np.inf],
-        labels=["Alone", "Small", "Medium", "Large"],
-    )
-    result["HasCabin"] = result["Cabin"].notna().astype(int)
-    result["Deck"] = result["Cabin"].str[0].fillna("Unknown")
-    result["FarePerPerson"] = result["Fare"] / result["FamilySize"]
-    return result
-
-
-class FillAge(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        self.median_ = X["Age"].median()
-        return self
-
-    def transform(self, X):
-        result = X.copy()
-        result["Age"] = result["Age"].fillna(self.median_)
-        result["Child"] = (result["Age"] < 14).astype(int)
-        result["Mother"] = (
-            (result["Sex"] == "female")
-            & (result["Age"] >= 18)
-            & (result["Parch"] > 0)
-            & (result["Title"] != "Miss")
-        ).astype(int)
-        return result
-
-
 def make_estimator(params, seed):
     estimators = {
         "forest": RandomForestClassifier,
@@ -88,18 +53,14 @@ def make_pipeline(numeric, categorical, estimator):
             ("onehot", OneHotEncoder(handle_unknown="ignore")),
         ]), categorical),
     ])
-    return Pipeline([
-        ("age", FillAge()),
-        ("preprocessor", preprocessor),
-        ("model", estimator),
-    ])
+    return Pipeline([("preprocessor", preprocessor), ("model", estimator)])
 
 
 def main():
     params = yaml.safe_load(Path("params.yaml").read_text(encoding="utf-8"))
     data = pd.read_csv("data/train.csv")
     y = data["Survived"]
-    X = add_features(data.drop(columns="Survived"))
+    X = data.drop(columns="Survived")
     numeric, categorical = FEATURE_SETS[params["features"]]
     features = numeric + categorical
     seed = params["cv"]["random_state"]
@@ -124,9 +85,8 @@ def main():
             "f1": f1_score(actual, predicted, zero_division=0),
             "roc_auc": roc_auc_score(actual, probability),
         })
-        prepared = model.named_steps["age"].transform(check)
         result = permutation_importance(
-            model[1:], prepared[features], actual, scoring="accuracy",
+            model, check[features], actual, scoring="accuracy",
             n_repeats=5, random_state=seed,
         )
         importance.append(result.importances_mean)

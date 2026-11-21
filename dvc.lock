@@ -5,16 +5,16 @@ stages:
     deps:
     - path: data/train.csv
       hash: md5
-      md5: 2309cc5f04782ed9bb6016d9f4e381cf
-      size: 61194
+      md5: 6355d4abdd853b36353160e108990007
+      size: 78967
     - path: requirements.txt
       hash: md5
       md5: 5c2b4337b3627e48e59a2a0e44c94080
       size: 73
     - path: train.py
       hash: md5
-      md5: befd60da186b77e92e5520137bfd3ad9
-      size: 5791
+      md5: 9cb18f4841409d6d8d2cdad26eff19fe
+      size: 4261
     params:
       params.yaml:
         cv:
@@ -34,17 +34,46 @@ stages:
     outs:
     - path: evaluation/importance.csv
       hash: md5
-      md5: 4c2bc4790470a3964c81cdab640dd0c4
-      size: 505
+      md5: 93a6df35f4cbc4108f2b95fc42b513c1
+      size: 490
     - path: evaluation/metrics.json
       hash: md5
-      md5: 72dcc45e44c8aef194d3116c8393c56f
+      md5: 80e87b4b69b03e477ab74d9f2bb694cb
       size: 103
     - path: evaluation/predictions.csv
       hash: md5
-      md5: 3225221a25e582246dc0a360eef9d4d9
-      size: 27047
+      md5: 24d172a234eaea4e08c4abff4f4c04bc
+      size: 21624
     - path: evaluation/roc.csv
       hash: md5
-      md5: b4d193a583d862b58a2675680de7e80e
-      size: 11573
+      md5: 8d13a40491b67584a66681b213d4f76d
+      size: 7307
+  preprocess:
+    cmd: py -3.13 preprocess.py
+    deps:
+    - path: data/raw.csv
+      hash: md5
+      md5: 2309cc5f04782ed9bb6016d9f4e381cf
+      size: 61194
+    - path: preprocess.py
+      hash: md5
+      md5: 66fa99076478d4027a29540e47798c7a
+      size: 2135
+    - path: requirements.txt
+      hash: md5
+      md5: 5c2b4337b3627e48e59a2a0e44c94080
+      size: 73
+    params:
+      params.yaml:
+        preprocess:
+          test_size: 0.2
+          random_state: 42
+    outs:
+    - path: data/test.csv
+      hash: md5
+      md5: aadf050da27366e71018f5d4574d1846
+      size: 19990
+    - path: data/train.csv
+      hash: md5
+      md5: 6355d4abdd853b36353160e108990007
+      size: 78967

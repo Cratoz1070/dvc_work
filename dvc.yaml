@@ -1,4 +1,15 @@
 stages:
+  preprocess:
+    cmd: py -3.13 preprocess.py
+    deps:
+      - data/raw.csv
+      - preprocess.py
+      - requirements.txt
+    params:
+      - preprocess
+    outs:
+      - data/train.csv
+      - data/test.csv
   evaluate:
     cmd: py -3.13 train.py
     deps:
